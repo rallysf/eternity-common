@@ -28,11 +28,14 @@ SOFTWARE. *
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
+import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.eternity.common.SubSystemNames;
+import com.eternity.common.annotations.BindCommand;
 import com.google.gson.Gson;
 
 public abstract class MessageConsumer {
@@ -100,8 +103,43 @@ public abstract class MessageConsumer {
 
 	/**
 	 * populate the commandRegistry define the request and response factories
+	 * @param <T>
 	 */
-	protected abstract void init();
+	protected <T extends Enum<? extends MessageNames>> void init(){
+		Reflections ref = new Reflections();
+		Set<Class<?>> commands = ref.getTypesAnnotatedWith(BindCommand.class);
+
+		for(Class<?> command : commands){
+			BindCommand binding = command.getAnnotation(BindCommand.class);
+			Enum<? extends MessageNames> constants[] = binding.clazz().getEnumConstants();
+			if(constants == null){
+				/* This case should trigger a compilation exception when applying the
+				 * BindCommand annotation.
+				 */
+				log.error(binding.clazz().getName()
+						+ " is not an enumeration type  --  skipping command "
+						+ binding.name());
+				continue;
+			}
+			for(Enum<? extends MessageNames> constant : constants){
+				if(binding.name().equalsIgnoreCase(constant.name())){
+					try {
+						commandRegistry.put((MessageNames)constant,
+								command.asSubclass(Command.class).newInstance());
+					} catch (InstantiationException e) {
+						log.error("Error instatiating command object for command "
+								+ binding.name(),
+								e);
+					} catch (IllegalAccessException e) {
+						log.error("Error instatiating command object for command "
+								+ binding.name(),
+								e);
+					}
+					break;
+				}
+			}
+		}
+	}
 
 
 	public boolean isReady(){
