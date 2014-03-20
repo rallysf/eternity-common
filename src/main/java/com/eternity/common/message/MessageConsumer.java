@@ -139,6 +139,7 @@ public abstract class MessageConsumer {
 				}
 			}
 		}
+		setReady(true);
 	}
 
 
