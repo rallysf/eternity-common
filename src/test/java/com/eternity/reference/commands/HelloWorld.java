@@ -1,9 +1,11 @@
 package com.eternity.reference.commands;
+import com.eternity.common.annotations.BindCommand;
 import com.eternity.common.message.Response;
 import com.eternity.reference.Command;
 import com.eternity.reference.ReferenceRequest;
 import com.eternity.reference.ResponseFields;
 
+@BindCommand
 public class HelloWorld extends Command {
 
 	@Override

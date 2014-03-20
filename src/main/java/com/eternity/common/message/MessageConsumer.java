@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.reflections.Reflections;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,50 +95,38 @@ public abstract class MessageConsumer {
 	protected SubSystemNames subsystem;
 	protected RequestFactory requestFactory;
 	protected String hostName;
-	protected Map<MessageNames, Command> commandRegistry = new HashMap<MessageNames, Command>();
+	protected Map<String, Command> commandRegistry = new HashMap<String, Command>();
 	private boolean ready = false;
 	private static Logger log = LoggerFactory.getLogger(MessageConsumer.class);
+	private String commandsPackage = null;
 
-	protected MessageConsumer(SubSystemNames subsystem) {
+	protected MessageConsumer(SubSystemNames subsystem, String commandsPackage) {
 		this.subsystem = subsystem;
+		this.commandsPackage = commandsPackage;
 	}
 
 	/**
 	 * populate the commandRegistry define the request and response factories
-	 * @param <T>
 	 */
-	protected <T extends Enum<? extends MessageNames>> void init(){
-		Reflections ref = new Reflections();
+	protected void init(){
+		Reflections ref = new Reflections(new ConfigurationBuilder()
+			.setUrls(ClasspathHelper.forPackage(commandsPackage)));
 		Set<Class<?>> commands = ref.getTypesAnnotatedWith(BindCommand.class);
 
 		for(Class<?> command : commands){
 			BindCommand binding = command.getAnnotation(BindCommand.class);
-			Enum<? extends MessageNames> constants[] = binding.clazz().getEnumConstants();
-			if(constants == null){
-				/* This case should trigger a compilation exception when applying the
-				 * BindCommand annotation.
-				 */
-				log.error(binding.clazz().getName()
-						+ " is not an enumeration type  --  skipping command "
-						+ binding.name());
-				continue;
-			}
-			for(Enum<? extends MessageNames> constant : constants){
-				if(binding.name().equalsIgnoreCase(constant.name())){
-					try {
-						commandRegistry.put((MessageNames)constant,
-								command.asSubclass(Command.class).newInstance());
-					} catch (InstantiationException e) {
-						log.error("Error instatiating command object for command "
-								+ binding.name(),
-								e);
-					} catch (IllegalAccessException e) {
-						log.error("Error instatiating command object for command "
-								+ binding.name(),
-								e);
-					}
-					break;
+			try {
+				Command cmd = command.asSubclass(Command.class).newInstance();
+				if(binding.value().equals("")){
+					commandRegistry.put(command.getSimpleName(), cmd);
 				}
+				else{
+					commandRegistry.put(binding.value(), cmd);
+				}
+			} catch (InstantiationException e) {
+				log.error("Unable to instatiate command: " + command.getName(), e);
+			} catch (IllegalAccessException e) {
+				log.error("Unable to instatiate command: " + command.getName(), e);
 			}
 		}
 		setReady(true);

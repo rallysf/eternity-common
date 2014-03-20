@@ -33,8 +33,8 @@ public class RemoteAsyncMessageConsumer extends MessageConsumer {
 	private String remoteServerAddress;
 	protected Gson gson;
 
-	public RemoteAsyncMessageConsumer(SubSystemNames subsystem, String remoteServerAddress, MessageConsumer localConsumer) {
-		super(subsystem);
+	public RemoteAsyncMessageConsumer(SubSystemNames subsystem, String commandsPackage, String remoteServerAddress, MessageConsumer localConsumer) {
+		super(subsystem, commandsPackage);
 		this.remoteServerAddress = remoteServerAddress;
 		this.gson = localConsumer.getGson();
 	}

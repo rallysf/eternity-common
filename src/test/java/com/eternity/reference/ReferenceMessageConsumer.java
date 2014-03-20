@@ -11,28 +11,17 @@ import com.eternity.common.message.ParameterNames;
 import com.eternity.common.message.Request;
 import com.eternity.common.message.RequestFactory;
 import com.eternity.common.test.TestSubSystems;
-import com.eternity.reference.commands.HelloWorld;
 import com.eternity.reference.json.GsonFactory;
 
 public class ReferenceMessageConsumer extends MessageConsumer implements RequestFactory {
 
 	private static Logger log = LoggerFactory.getLogger(ReferenceMessageConsumer.class);
 
-	public ReferenceMessageConsumer(SubSystemNames subsystem) {
-		super(subsystem);
+	public ReferenceMessageConsumer(SubSystemNames subsystem, String commandPackage) {
+		super(subsystem, commandPackage);
 		requestFactory = this;
 		gson = GsonFactory.getGson();
 		subsystemNames = TestSubSystems.alpha;  // any instance will do
-	}
-	
-	@Override
-	protected void init() {
-		try {
-			commandRegistry.put(Messages.HelloWorld, new HelloWorld());
-			
-		} catch (Exception e) {
-			log.error("init fail", e);
-		}
 	}
 
 	@Override

@@ -42,14 +42,14 @@ public class RemoteSyncMessageConsumer extends MessageConsumer {
 	protected Gson gson;
 	private int timeoutInMS = 0;
 
-	public RemoteSyncMessageConsumer(SubSystemNames subsystem, String remoteServerAddress, MessageConsumer localConsumer) {
-		super(subsystem);
+	public RemoteSyncMessageConsumer(SubSystemNames subsystem, String commandsPackage, String remoteServerAddress, MessageConsumer localConsumer) {
+		super(subsystem, commandsPackage);
 		this.remoteServerAddress = remoteServerAddress;
 		this.gson = localConsumer.getGson();
 	}
 
-	public RemoteSyncMessageConsumer(SubSystemNames subsystem, String remoteServerAddress, MessageConsumer localConsumer, int timeoutInMS) {
-		super(subsystem);
+	public RemoteSyncMessageConsumer(SubSystemNames subsystem, String commandsPackage, String remoteServerAddress, MessageConsumer localConsumer, int timeoutInMS) {
+		super(subsystem, commandsPackage);
 		this.remoteServerAddress = remoteServerAddress;
 		this.gson = localConsumer.getGson();
 		this.timeoutInMS = timeoutInMS;

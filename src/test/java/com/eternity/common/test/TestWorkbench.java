@@ -39,7 +39,7 @@ public class TestWorkbench implements MessageConsumerFactory {
 	@Override
 	public MessageConsumer createMessageConsumer(SubSystemNames subsystem) {
 		
-		return new ReferenceMessageConsumer(subsystem);
+		return new ReferenceMessageConsumer(subsystem, "com.eternity.reference.commands");
 	}
 
 	@Override
