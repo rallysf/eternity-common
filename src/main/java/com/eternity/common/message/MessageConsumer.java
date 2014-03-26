@@ -28,11 +28,16 @@ SOFTWARE. *
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
+import org.reflections.Reflections;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.eternity.common.SubSystemNames;
+import com.eternity.common.annotations.BindCommand;
 import com.google.gson.Gson;
 
 public abstract class MessageConsumer {
@@ -90,18 +95,42 @@ public abstract class MessageConsumer {
 	protected SubSystemNames subsystem;
 	protected RequestFactory requestFactory;
 	protected String hostName;
-	protected Map<MessageNames, Command> commandRegistry = new HashMap<MessageNames, Command>();
+	protected Map<String, Command> commandRegistry = new HashMap<String, Command>();
 	private boolean ready = false;
 	private static Logger log = LoggerFactory.getLogger(MessageConsumer.class);
+	private String commandsPackage = null;
 
-	protected MessageConsumer(SubSystemNames subsystem) {
+	protected MessageConsumer(SubSystemNames subsystem, String commandsPackage) {
 		this.subsystem = subsystem;
+		this.commandsPackage = commandsPackage;
 	}
 
 	/**
 	 * populate the commandRegistry define the request and response factories
 	 */
-	protected abstract void init();
+	protected void init(){
+		Reflections ref = new Reflections(new ConfigurationBuilder()
+			.setUrls(ClasspathHelper.forPackage(commandsPackage)));
+		Set<Class<?>> commands = ref.getTypesAnnotatedWith(BindCommand.class);
+
+		for(Class<?> command : commands){
+			BindCommand binding = command.getAnnotation(BindCommand.class);
+			try {
+				Command cmd = command.asSubclass(Command.class).newInstance();
+				if(binding.value().equals("")){
+					commandRegistry.put(command.getSimpleName(), cmd);
+				}
+				else{
+					commandRegistry.put(binding.value(), cmd);
+				}
+			} catch (InstantiationException e) {
+				log.error("Unable to instatiate command: " + command.getName(), e);
+			} catch (IllegalAccessException e) {
+				log.error("Unable to instatiate command: " + command.getName(), e);
+			}
+		}
+		setReady(true);
+	}
 
 
 	public boolean isReady(){

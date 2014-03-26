@@ -37,7 +37,7 @@ import java.util.Map;
  * 
  */
 public class Message {
-	public MessageNames commandName;
+	public String commandName;
 	public Map<ParameterNames, String> paramMap;
 	// if there is a post request, we store the posted data here
 	public String jsonData;
