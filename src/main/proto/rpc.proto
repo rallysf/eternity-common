@@ -1,0 +1,25 @@
+package eternity.common;
+
+option java_package = "com.eternity.common.communication.protobuf";
+option java_outer_classname = "PROTO";
+
+message RequestParameter
+{
+  required string name = 1;
+  required string data = 2;
+}
+
+message Request
+{
+  required string service = 1;
+  required string method = 2;
+  required bytes data = 3;
+  repeated RequestParameter parameters = 4;
+}
+
+message Response
+{
+  required int32 status = 1;
+  optional bytes response = 2;
+  repeated string error = 3;
+}
