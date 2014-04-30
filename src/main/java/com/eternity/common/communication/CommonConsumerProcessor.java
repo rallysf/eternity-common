@@ -53,12 +53,12 @@ public class CommonConsumerProcessor extends ConsumerProcessor {
 		
 		if (message != null && message.subsystem != null && message.message != null) {
 			if (message.subsystem != null) {
-				MessageConsumer consumer = MessageConsumer.getInstance(message.subsystem, messgeConsumerFactory, hostName);
+				MessageConsumer consumer = MessageConsumer.getInstance(message.subsystem, messgeConsumerFactory);
 				
 				log.debug(message.message.toString());
 				
 				Response response = consumer.processMessage(message.message);
-				retVal = response.getJSONResponseData();
+				//retVal = response.getJSONResponseData();
 				
 				log.debug(retVal);
 			} else {

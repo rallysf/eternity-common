@@ -161,6 +161,10 @@ public class Request {
 	public String getPostData() {
 		return jsonData;
 	}
+	
+	public void setPostData(String jsonData){
+		this.jsonData = jsonData;
+	}
 
 	public <T> T getPostData(Class<T> klass) {
 		try {

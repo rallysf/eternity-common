@@ -45,8 +45,8 @@ public class RemoteAsyncMessageConsumer extends MessageConsumer {
 
 	@Override
 	public Response processMessage(Message jsonMessage) {
-		String message = gson.toJson(new SubSystemMessage(jsonMessage, subsystem));
+		String message = gson.toJson(jsonMessage);
 		Client.getInstance(remoteServerAddress).sendRequest(message);
-		return new Response(gson);
+		return new Response();
 	}
 }
