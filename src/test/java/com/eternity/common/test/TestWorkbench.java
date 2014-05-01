@@ -16,8 +16,6 @@ import com.eternity.common.SubSystemNames;
 import com.eternity.common.communication.protocol.ProtocolHandlers;
 import com.eternity.common.communication.protocol.json.EternityJSONProtocol;
 import com.eternity.common.communication.protocol.json.EternityMessageJsonDeserializer;
-import com.eternity.common.communication.protocol.protobuf.gson.GeneratedMessageJsonDeserializer;
-import com.eternity.common.communication.protocol.protobuf.gson.GeneratedMessageJsonSerializer;
 import com.eternity.common.message.Message;
 import com.eternity.common.message.MessageConsumer;
 import com.eternity.common.message.MessageConsumerFactory;
@@ -28,7 +26,6 @@ import com.eternity.reference.json.GsonFactory;
 import com.eternity.reference.json.ParameterNamesJsonDeserializer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.protobuf.GeneratedMessage;
 
 public class TestWorkbench implements MessageConsumerFactory
 {
@@ -38,11 +35,7 @@ public class TestWorkbench implements MessageConsumerFactory
   public void testValidFieldResponse() throws UnsupportedEncodingException,
                                       IOException
   {
-    Gson gson = new GsonBuilder().registerTypeAdapter(GeneratedMessage.class,
-                                                      new GeneratedMessageJsonSerializer())
-                                 .registerTypeAdapter(GeneratedMessage.class,
-                                                      new GeneratedMessageJsonDeserializer())
-                                 .registerTypeAdapter(ParameterNames.class,
+    Gson gson = new GsonBuilder().registerTypeAdapter(ParameterNames.class,
                                                       new ParameterNamesJsonDeserializer())
                                  .registerTypeAdapter(Message.class,
                                                       new EternityMessageJsonDeserializer())
