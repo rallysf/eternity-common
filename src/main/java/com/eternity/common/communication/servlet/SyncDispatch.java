@@ -34,6 +34,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContainerInitializer;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -141,6 +142,12 @@ public abstract class SyncDispatch extends HttpServlet implements MessageConsume
     Message message = (Message) decoder.decode(ByteBuffer.wrap(jsonMessage.getBytes(charset)),
                                                Message.class);
     message.encoding = contentType;
+    if(message.subsystemName == null)
+    {
+      message.subsystemName = req.getRequestURL()
+          .toString()
+          .replaceFirst(".*/([^/?]+).*", "$1");
+    }
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     if(data != null)
       IOUtils.copy(data, bytes);
