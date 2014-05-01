@@ -166,14 +166,9 @@ public abstract class MessageConsumer
         {
           cmd = typedCommandClass.newInstance();
         }
-        if (binding.value().equals(""))
-        {
-          commandRegistry.put(command.getSimpleName(), cmd);
-        }
-        else
-        {
-          commandRegistry.put(binding.value(), cmd);
-        }
+        String commandName = binding.value().equals("") ? command.getSimpleName() : binding.value();
+        log.info("Registered command: %s (%s)", commandName, command.getName());
+        commandRegistry.put(commandName, cmd);
       }
       catch (InstantiationException e)
       {

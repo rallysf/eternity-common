@@ -88,18 +88,25 @@ public abstract class SyncDispatch extends HttpServlet implements MessageConsume
     String charset = req.getCharacterEncoding();
     String acceptsHeader = req.getHeader("Accept");
     Encoder encoder = null;
-    Decoder decoder = ProtocolHandlers.getHandlers().getDecoder(contentType);
-
-    if (charset == null)
+    
+    if(charset == null)
     {
       charset = "UTF-8";
     }
-
-    if (decoder == null)
+    
+    contentType += ";" + charset;
+    
+    Decoder decoder = ProtocolHandlers.getHandlers()
+        .getDecoder(contentType);
+    
+    if(decoder == null)
     {
       resp.setStatus(400);
       PrintWriter p = resp.getWriter();
       p.write("Unacceptable Content-Type!");
+      log.warn("Received request with invalid content type of: %s (derived: %s)",
+               req.getContentType(),
+               contentType);
       return;
     }
 
@@ -109,7 +116,8 @@ public abstract class SyncDispatch extends HttpServlet implements MessageConsume
 
       for (String accept : accepts)
       {
-        encoder = ProtocolHandlers.getHandlers().getEncoder(accept.trim());
+        encoder = ProtocolHandlers.getHandlers()
+            .getEncoder(accept.trim() +";" + charset);
         if (encoder != null)
           break;
       }
@@ -124,6 +132,8 @@ public abstract class SyncDispatch extends HttpServlet implements MessageConsume
       resp.setStatus(400);
       PrintWriter p = resp.getWriter();
       p.write("Unacceptable or missing ACCEPT header!");
+      log.warn("Cannot return data in formats: %s  - if you think this is wrong please check character encodings.",
+               acceptsHeader);
       return;
     }
 
