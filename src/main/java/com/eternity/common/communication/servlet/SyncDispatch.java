@@ -34,7 +34,6 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContainerInitializer;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -51,6 +50,7 @@ import com.eternity.common.message.Message;
 import com.eternity.common.message.MessageConsumer;
 import com.eternity.common.message.MessageConsumerFactory;
 import com.eternity.common.message.Parameter;
+import com.eternity.common.message.Response;
 
 @Deprecated
 public abstract class SyncDispatch extends HttpServlet implements MessageConsumerFactory {
@@ -132,7 +132,7 @@ public abstract class SyncDispatch extends HttpServlet implements MessageConsume
     {
       resp.setStatus(400);
       PrintWriter p = resp.getWriter();
-      p.write("Unacceptable or missing ACCEPT header!");
+      p.println("{\"status\": 400, \"errors\": [\"Unacceptable or missing ACCEPT header!\"]}");
       log.warn("Cannot return data in formats: %s  - if you think this is wrong please check character encodings.",
                acceptsHeader);
       return;
@@ -152,7 +152,8 @@ public abstract class SyncDispatch extends HttpServlet implements MessageConsume
     if(data != null)
       IOUtils.copy(data, bytes);
     message.body = ByteBuffer.wrap(bytes.toByteArray());
-    Object result = MessageConsumer.dispatchMessage(message, null, hostName);
+    Response result = MessageConsumer.dispatchMessage(message, null, hostName);
+    resp.setStatus(result.getStatus());
     resp.getOutputStream().write(encoder.encode(result).array());
   }
 }
