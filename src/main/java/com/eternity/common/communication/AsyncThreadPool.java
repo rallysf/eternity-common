@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.eternity.common.message.Message;
 import com.eternity.common.message.MessageConsumer;
 import com.eternity.common.message.Response;
 
@@ -46,26 +47,24 @@ public class AsyncThreadPool {
 		this.pool = Executors.newFixedThreadPool(10);
 	}
 
-	public void execute(MessageConsumer consumer, String JSON) {
+	public void execute(MessageConsumer consumer, Message message) {
 
-		ExecutionThread thread = new ExecutionThread(consumer, JSON);
+		ExecutionThread thread = new ExecutionThread(consumer, message);
 		pool.execute(thread);
 	}
 
 	private class ExecutionThread implements Runnable {
 		private MessageConsumer consumer;
-		private String JSON;
+		private Message message;
 
-		public ExecutionThread(MessageConsumer consumer, String JSON) {
+		public ExecutionThread(MessageConsumer consumer, Message message) {
 			this.consumer = consumer;
-			this.JSON = JSON;
+			this.message = message;
 		}
 
 		@Override
 		public void run() {
-			 Response response = consumer.processMessage(JSON);
-			 String result = response.getJSONResponseData();
-			 log.debug(result);
+			 Response response = consumer.processMessage(message);
 		}
 	}
 }

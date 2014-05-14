@@ -1,5 +1,12 @@
 package com.eternity.common.message;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
+import com.eternity.common.communication.protocol.Decoder;
+import com.eternity.common.communication.protocol.Encoder;
+import com.eternity.common.exceptions.EternityException;
+
 /*
 The MIT License (MIT)
 
@@ -26,6 +33,6 @@ SOFTWARE. *
 
 
 public interface Command {
-	public void execute(Request request, Response response);
+	public ByteBuffer execute(ByteBuffer param, Decoder decoder, Encoder encoder) throws IOException, EternityException, Exception;
 	public boolean executeAlways();
 }

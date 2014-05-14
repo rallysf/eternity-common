@@ -61,20 +61,6 @@ public class RemoteSyncMessageConsumer extends MessageConsumer {
 
 	@Override
 	public Response processMessage(Message jsonMessage) {
-		String message = gson.toJson(new SubSystemMessage(jsonMessage, subsystem));
-		Future<String> future = Client.getInstance(remoteServerAddress).sendRequest(message);
-		Response retVal = new Response(gson);
-		try {
-			if (timeoutInMS == 0) {
-				retVal.setJSONResponse(future.get());
-			} else {
-				retVal.setJSONResponse(future.get(timeoutInMS, TimeUnit.MILLISECONDS));
-			}
-		} catch (Exception e) {
-			retVal.errors.add(e.getLocalizedMessage());
-			retVal.setStatusToTimedOut_408();
-			log.error("", e);
-		}
-		return retVal;
+	  return null;
 	}
 }

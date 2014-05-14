@@ -25,10 +25,15 @@ SOFTWARE. *
  */
 
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+
+import com.eternity.common.communication.protocol.ProtocolHandlers;
+import com.eternity.common.message.Message;
 import com.eternity.common.message.MessageConsumer;
 import com.eternity.common.message.MessageConsumerFactory;
 import com.eternity.common.message.Response;
-import com.eternity.common.message.SubSystemMessage;
 import com.eternity.socket.server.ConsumerProcessor;
 import com.google.gson.Gson;
 
@@ -47,26 +52,44 @@ public class CommonConsumerProcessor extends ConsumerProcessor {
 	@Override
 	public String getResponse(String JSON) {
 		String retVal = NO_RESPONSE;
-		SubSystemMessage message = gson.fromJson(JSON, SubSystemMessage.class);
-		
-		log.debug("SubSystemMessage="+message);
-		
-		if (message != null && message.subsystem != null && message.message != null) {
-			if (message.subsystem != null) {
-				MessageConsumer consumer = MessageConsumer.getInstance(message.subsystem, messgeConsumerFactory, hostName);
-				
-				log.debug(message.message.toString());
-				
-				Response response = consumer.processMessage(message.message);
-				retVal = response.getJSONResponseData();
-				
-				log.debug(retVal);
-			} else {
-				log.error("invalid subsystem specified [" + message.subsystem + "]");
-			}
-		} else {
-			log.error("subsystem and JSON must both be non-null - " + message);
+		Message message = null;
+		try
+		{
+		  message = (Message)ProtocolHandlers.getHandlers()
+		      .getDecoder("application/json;UTF-8")
+		      .decode(ByteBuffer.wrap(JSON.getBytes("UTF-8")),
+		              Message.class);
 		}
+		catch (UnsupportedEncodingException e1)
+		{
+		  //Doesn't happen - guaranteed by JVM.
+		}
+		catch (IOException e1)
+		{
+		  //Doesn't happen - no real I/O.
+		}
+		
+		log.debug("Message="+message);
+
+		Response response = MessageConsumer.dispatchMessage(message, messgeConsumerFactory, hostName);
+		try
+		{
+		  retVal = new String(ProtocolHandlers.getHandlers()
+		                      .getEncoder("application/json;UTF-8")
+		                      .encode(response)
+		                      .array(),
+		                      "UTF-8");
+		}
+		catch (UnsupportedEncodingException e)
+		{
+		  //This doesn't happen as UTF-8 support is guaranteed by the JVM spec.
+		}
+		catch (IOException e)
+		{
+		  //This doesn't happen either as we're not doing any real I/O.
+		}
+
+		log.debug(retVal);
 		return retVal;
 	}
 

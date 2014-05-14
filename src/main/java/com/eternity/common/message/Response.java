@@ -33,72 +33,21 @@ import java.util.Map;
 import com.google.gson.Gson;
 
 public class Response {
-	protected Map<String, Object> responseFields = new HashMap<String, Object>();
-	
-	protected String jsonResponse = null;
+  public Object data;
 	
 	protected int status = 200;
 	
-	protected Gson gson;
-	
-	final static String EMPTY_RESPONSE = "";
-	
 	public List<String> errors = new ArrayList<String>();
 
-	protected Response(Gson gson) {
-		this.gson = gson;
-	}
-
-	public void setResponseField(ResponseFieldNames responseField, Object value) {
-		responseFields.put(responseField.toString(), value);
+	public Response() {
 	}
 	
 	public int getStatus() {
 		return status;
 	}
 
-	public void setJSONResponse(String jsonResponse) {
-		// sure would be nice if we could verify that this was a well formatted json string
-		// because it it wasn't, we could set status to 500 and throw the response in the error so the poor sap
-		// using this had something to help debug. But, for now, we will make the poor sap's life just a little bit
-		// worse in this case
-		this.jsonResponse = jsonResponse; 
-	}
-	
-	public void setJSONResponse(Object value) {
-		setJSONResponse(gson.toJson(value));
-	}
-
-	public String getJSONResponseData() {
-		if (errors.size() > 0 && status == 200) status = 400;
-		
-		// check to see if we have an error condition
-		if (status != 200) {
-			// we had errors, return a json version of this object;
-			return gson.toJson(new ResponseError(responseFields, jsonResponse, status, errors));
-		}
-		
-		// now, we are either going to return responseFields or jsonResponse
-		// check to make sure we don't have values in both.  
-		// if we do, someone dun f'd up
-		if (responseFields.size() > 0 && jsonResponse != null) {
-			status = 500;
-			errors.add("There is return information in responseFields and jsonReponse, and yes, the jsonResponse, in this case is supposed to be escaped out, don't try to fix it.");
-			return gson.toJson(new ResponseError(responseFields, jsonResponse, status, errors));
-		}
-		
-		// check to see if we are returning fields
-		if (responseFields.size() > 0) {
-			return gson.toJson(responseFields);
-		}
-		
-		// check to see if we have a jsonResponse
-		if (jsonResponse != null) {
-			return jsonResponse;
-		}
-		
-		// guess there is nothing to return
-		return EMPTY_RESPONSE;
+	public void setData(Object data) {
+		this.data = data;
 	}
 
 	public void setStatus(int status) {
@@ -137,7 +86,7 @@ public class Response {
 		this.status = 503;
 	}
 
-	public void addErrors(ArrayList<String> errors) {
+	public void addErrors(List<String> errors) {
 		this.errors.addAll(errors);
 	}
 

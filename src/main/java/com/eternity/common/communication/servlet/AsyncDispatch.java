@@ -25,11 +25,13 @@ SOFTWARE. *
  */
 
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Date;
+import java.nio.ByteBuffer;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -37,14 +39,18 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.eternity.common.SubSystemNames;
-import com.eternity.common.communication.AsyncThreadPool;
+import com.eternity.common.communication.protocol.Decoder;
+import com.eternity.common.communication.protocol.Encoder;
+import com.eternity.common.communication.protocol.ProtocolHandlers;
+import com.eternity.common.message.Message;
 import com.eternity.common.message.MessageConsumer;
 import com.eternity.common.message.MessageConsumerFactory;
 import com.eternity.common.message.Parameter;
+import com.eternity.common.message.Response;
 
 public abstract class AsyncDispatch extends HttpServlet implements
 		MessageConsumerFactory {
@@ -69,34 +75,72 @@ public abstract class AsyncDispatch extends HttpServlet implements
 
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
-		Date date = new Date();
-		PrintWriter writer = response.getWriter();
-		try {
-			String subsystemId = request.getParameter(Parameter.subsystemId.toString());
-			String JSON = request.getParameter(Parameter.jsonMessage.toString());
-
-			SubSystemNames subsystem = MessageConsumer.getSubSystem(subsystemId);
-			
-			if (subsystem != null) {
-				MessageConsumer consumer = MessageConsumer.getInstance(subsystem, this, hostName);
-				// fire and forget
-				AsyncThreadPool.instance.execute(consumer, JSON);
-				// always says ok
-				writer.println("ok");
-			} else {
-				String error = "invalid gameId specified [" + subsystemId + "]";
-				writer.println(error);
-				log.error(error);
-			}
-		} finally {
-			writer.close();
-			log.debug("AsynchDispatch completed in : "
-					+ (new Date().getTime() - date.getTime()) + "ms");
-		}
+	  doRequest(request, response, null);
 	}
 
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
-		doGet(request, response);
+		doRequest(request, response, request.getInputStream());
 	}
+
+  protected void doRequest(HttpServletRequest req, HttpServletResponse resp,
+                           InputStream data) throws ServletException,
+                                            IOException
+  {
+    String contentType = req.getContentType();
+    String charset = req.getCharacterEncoding();
+    String acceptsHeader = req.getHeader("Accept");
+    Encoder encoder = null;
+    Decoder decoder = ProtocolHandlers.getHandlers().getDecoder(contentType);
+
+    if (charset == null)
+    {
+      charset = "UTF-8";
+    }
+
+    if (decoder == null)
+    {
+      resp.setStatus(400);
+      PrintWriter p = resp.getWriter();
+      p.write("Unacceptable Content-Type!");
+      return;
+    }
+
+    if (acceptsHeader != null)
+    {
+      String accepts[] = acceptsHeader.split(",");
+
+      for (String accept : accepts)
+      {
+        encoder = ProtocolHandlers.getHandlers().getEncoder(accept.trim());
+        if (encoder != null)
+          break;
+      }
+    }
+    else
+    {
+      encoder = ProtocolHandlers.getHandlers().getEncoder(contentType);
+    }
+
+    if (encoder == null)
+    {
+      resp.setStatus(400);
+      PrintWriter p = resp.getWriter();
+      p.write("Unacceptable or missing ACCEPT header!");
+      return;
+    }
+
+    String jsonMessage = req.getParameter(Parameter.jsonMessage.toString());
+    Message message = (Message) decoder.decode(ByteBuffer.wrap(jsonMessage.getBytes(charset)),
+                                               Message.class);
+    message.encoding = contentType;
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    if(data != null)
+      IOUtils.copy(data, bytes);
+    message.body = ByteBuffer.wrap(bytes.toByteArray());
+    MessageConsumer.dispatchAsyncMessage(message, null, hostName);
+    Response result = new Response();
+    result.setStatus(200);
+    resp.getOutputStream().write(encoder.encode(result).array());
+  }
 }
