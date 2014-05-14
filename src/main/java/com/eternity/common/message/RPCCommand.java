@@ -26,7 +26,7 @@ public abstract class RPCCommand<Input, Output> implements Command {
 	                          Decoder decoder,
 	                          Encoder encoder) throws IOException, EternityException, Exception
 	{
-	  log.debug("Received command: %s", getClass().getName());
+	  log.debug("Received command: {}", getClass().getName());
 	  if(param == null)
 	  {
 	    return encoder.encode(execute(null));

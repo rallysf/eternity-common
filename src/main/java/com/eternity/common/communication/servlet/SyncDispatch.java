@@ -105,7 +105,7 @@ public abstract class SyncDispatch extends HttpServlet implements MessageConsume
       resp.setStatus(400);
       PrintWriter p = resp.getWriter();
       p.write("Unacceptable Content-Type!");
-      log.warn("Received request with invalid content type of: %s (derived: %s)",
+      log.warn("Received request with invalid content type of: {} (derived: {})",
                req.getContentType(),
                contentType);
       return;
@@ -133,7 +133,7 @@ public abstract class SyncDispatch extends HttpServlet implements MessageConsume
       resp.setStatus(400);
       PrintWriter p = resp.getWriter();
       p.println("{\"status\": 400, \"errors\": [\"Unacceptable or missing ACCEPT header!\"]}");
-      log.warn("Cannot return data in formats: %s  - if you think this is wrong please check character encodings.",
+      log.warn("Cannot return data in formats: {}  - if you think this is wrong please check character encodings.",
                acceptsHeader);
       return;
     }
