@@ -5,5 +5,5 @@ import java.nio.ByteBuffer;
 
 public interface Encoder
 {
-  public ByteBuffer encode(Object r) throws IOException;
+  public ByteBuffer encode(Object r);
 }
