@@ -34,15 +34,14 @@ public class GeneratedMessageJsonDeserializer implements
   {
     try
     {
-      Class<? extends GeneratedMessage> type = Class.forName(typeToken.toString())
-          .asSubclass(GeneratedMessage.class);
+      Class<? extends GeneratedMessage> type = (Class<? extends GeneratedMessage>)typeToken;
       
       Builder builder = (Builder)type.getMethod("newBuilder")
           .invoke(null);
       
       if(!json.isJsonObject())
         return type.cast(builder.build());
-      
+
       JsonObject obj = json.getAsJsonObject();
       
       Descriptor descriptor = (Descriptor)type.getMethod("getDescriptor")
@@ -95,19 +94,9 @@ public class GeneratedMessageJsonDeserializer implements
                                                Long.TYPE));
           break;
         case MESSAGE:
-          FileDescriptor file = field.getMessageType().getFile();
-          FileOptions opts = file.getOptions();
-          StringBuilder classNameBuilder = new StringBuilder();
-          classNameBuilder.append(opts.getJavaPackage());
-          classNameBuilder.append(".");
-          if(!opts.getJavaMultipleFiles())
-          {
-            classNameBuilder.append(opts.getJavaOuterClassname());
-            classNameBuilder.append(".");
-          }
-          classNameBuilder.append(field.getMessageType().getName());
+          String className = getClassName(field);
           Class<? extends GeneratedMessage> sub = Class
-              .forName(classNameBuilder.toString())
+              .forName(className)
               .asSubclass(GeneratedMessage.class);
           builder.setField(field,
                            context.deserialize(obj.get(fieldName),
@@ -151,5 +140,21 @@ public class GeneratedMessageJsonDeserializer implements
       log.error(e.getMessage(), e);
     }
     return null;
+  }
+
+  private String getClassName(FieldDescriptor field)
+  {
+	  FileDescriptor file = field.getMessageType().getFile();
+	  FileOptions opts = file.getOptions();
+	  StringBuilder classNameBuilder = new StringBuilder();
+	  classNameBuilder.append(opts.getJavaPackage());
+	  classNameBuilder.append(".");
+	  if(!opts.getJavaMultipleFiles())
+	  {
+		  classNameBuilder.append(opts.getJavaOuterClassname());
+		  classNameBuilder.append("$");
+	  }
+	  classNameBuilder.append(field.getMessageType().getName());
+	  return classNameBuilder.toString();
   }
 }
