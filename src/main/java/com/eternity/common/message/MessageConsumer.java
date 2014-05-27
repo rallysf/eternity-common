@@ -197,32 +197,38 @@ public abstract class MessageConsumer
     return gson;
   }
 
+  class ErrorResponse
+  {
+    private String error;
+
+    public ErrorResponse(String error)
+    {
+      this.error = error;
+    }
+  }
+
   public Response processMessage(Message message)
   {
     log.debug(message.toString());
     Command command = commandRegistry.get(message.commandName);
     Response response = new Response();
+    Encoder encoder = getEncoderFor(message);
     try
     {
       response.data = command.execute(message.body,
                                       getDecoderFor(message),
-                                      getEncoderFor(message));
-    }
-    catch (IOException e)
-    {
-      response.setStatusToBadRequest_400();
-      response.addError(e.getLocalizedMessage());
+                                      encoder);
     }
     catch (EternityException e)
     {
       response.setStatus(e.getHttpStatusEquivalent());
-      response.addError(e.getMessage());
+      response.data = encoder.encode(new ErrorResponse(e.getMessage()));
     }
     catch (Exception e)
     {
       e.printStackTrace();
       response.setStatus(500);
-      response.addError(e.getMessage());
+      response.data = encoder.encode(new ErrorResponse(e.getMessage()));
     }
     return response;
   }

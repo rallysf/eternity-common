@@ -154,6 +154,6 @@ public abstract class SyncDispatch extends HttpServlet implements MessageConsume
     message.body = ByteBuffer.wrap(bytes.toByteArray());
     Response result = MessageConsumer.dispatchMessage(message, null, hostName);
     resp.setStatus(result.getStatus());
-    resp.getOutputStream().write(encoder.encode(result).array());
+    resp.getOutputStream().write(result.data.array());
   }
 }
