@@ -25,15 +25,12 @@ SOFTWARE. *
  */
 
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import com.google.gson.Gson;
 
 public class Response {
-  public Object data;
+  public ByteBuffer data;
 	
 	protected int status = 200;
 	
@@ -46,7 +43,7 @@ public class Response {
 		return status;
 	}
 
-	public void setData(Object data) {
+	public void setData(ByteBuffer data) {
 		this.data = data;
 	}
 

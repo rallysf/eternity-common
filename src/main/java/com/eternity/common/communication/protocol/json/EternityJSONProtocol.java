@@ -33,10 +33,16 @@ implements Decoder, Encoder
 
   @Override
   public ByteBuffer encode(Object r)
-      throws IOException
   {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    out.write(gson.toJson(r).getBytes(charset));
+    try
+    {
+      out.write(gson.toJson(r).getBytes(charset));
+    }
+    catch(IOException bs)
+    {
+      //THIS DOES NOT HAPPEN
+    }
     return ByteBuffer.wrap(out.toByteArray());
   }
 }

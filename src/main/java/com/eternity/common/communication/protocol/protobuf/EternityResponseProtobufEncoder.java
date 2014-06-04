@@ -23,8 +23,7 @@ implements Encoder
         .setStatus(response.getStatus());
     if(response.getStatus() == 200)
     {
-        builder.setResponse(ByteString.copyFrom(((GeneratedMessage)response.data)
-                                                .toByteArray()));
+        builder.setResponse(ByteString.copyFrom(response.data));
     }
     
     for(String error : response.errors)
