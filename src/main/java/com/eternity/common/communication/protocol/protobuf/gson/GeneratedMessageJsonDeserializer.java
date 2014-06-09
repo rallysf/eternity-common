@@ -49,7 +49,7 @@ public class GeneratedMessageJsonDeserializer implements
       for(FieldDescriptor field : descriptor.getFields())
       {
         String fieldName = field.getName();
-        if(!obj.has(fieldName)) continue;
+        if (!obj.has(fieldName) || obj.get(fieldName).isJsonNull()) continue;
         
         switch(field.getJavaType())
         {
