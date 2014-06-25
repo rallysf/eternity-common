@@ -3,10 +3,12 @@ package com.eternity.common.communication.protocol.protobuf.gson;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -34,85 +36,52 @@ public class GeneratedMessageJsonDeserializer implements
   {
     try
     {
+      @SuppressWarnings("unchecked")
       Class<? extends GeneratedMessage> type = (Class<? extends GeneratedMessage>)typeToken;
-      
+
       Builder builder = (Builder)type.getMethod("newBuilder")
           .invoke(null);
-      
+
       if(!json.isJsonObject())
         return type.cast(builder.build());
 
       JsonObject obj = json.getAsJsonObject();
-      
+
       Descriptor descriptor = (Descriptor)type.getMethod("getDescriptor")
           .invoke(null);
       for(FieldDescriptor field : descriptor.getFields())
       {
         String fieldName = field.getName();
-        if (!obj.has(fieldName) || obj.get(fieldName).isJsonNull()) continue;
-        
-        switch(field.getJavaType())
+
+        if(!obj.has(fieldName) || obj.get(fieldName).isJsonNull()) continue;
+
+        if(field.isRepeated())
         {
-        case BOOLEAN:
-          builder.setField(field,
-                           context.deserialize(obj.get(fieldName),
-                                               Boolean.TYPE));
-          break;
-        case BYTE_STRING:
-          ByteArrayOutputStream b = new ByteArrayOutputStream();
-          JsonArray array = obj.get(field.getName()).getAsJsonArray();
-          for(JsonElement e : array)
+          if(obj.get(fieldName).isJsonArray())
           {
-            b.write(e.getAsInt());
+            List<Object> list = Lists.newLinkedList();
+            for(JsonElement e : obj.get(fieldName).getAsJsonArray())
+            {
+              list.add(deserializeField(context, e, field));
+            }
+            builder.setField(field, list);
           }
-          builder.setField(field, ByteString.copyFrom(b.toByteArray()));
-          break;
-        case DOUBLE:
-          builder.setField(field,
-                           context.deserialize(obj.get(fieldName),
-                                               Double.TYPE));
-          break;
-        case ENUM:
-          builder.setField(field,
-                           field.getEnumType()
-                                .findValueByName(obj.get(field.getName())
-                                                    .getAsString()));
-          break;
-        case FLOAT:
-          builder.setField(field,
-                           context.deserialize(obj.get(fieldName),
-                                               Float.TYPE));
-          break;
-        case INT:
-          builder.setField(field,
-                           context.deserialize(obj.get(fieldName),
-                                               Integer.TYPE));
-          break;
-        case LONG:
-          builder.setField(field,
-                           context.deserialize(obj.get(fieldName),
-                                               Long.TYPE));
-          break;
-        case MESSAGE:
-          String className = getClassName(field);
-          Class<? extends GeneratedMessage> sub = Class
-              .forName(className)
-              .asSubclass(GeneratedMessage.class);
-          builder.setField(field,
-                           context.deserialize(obj.get(fieldName),
-                                               sub));
-          break;
-        case STRING:
-          builder.setField(field,
-                           context.deserialize(obj.get(fieldName),
-                                               String.class));
-          break;
-        default:
-          break;
-        
+          else
+          {
+            builder.setField(field,
+                             Lists.newArrayList(deserializeField(context,
+                                                                 obj.get(fieldName),
+                                                                 field)));
+          }
+        }
+        else
+        {
+          builder.setField(field, deserializeField(context,
+                                                   obj.get(fieldName),
+                                                   field));
         }
       }
-      
+
       return type.cast(builder.build());
     }
     catch (ClassNotFoundException e)
@@ -140,6 +109,55 @@ public class GeneratedMessageJsonDeserializer implements
       log.error(e.getMessage(), e);
     }
     return null;
+  }
+
+  private Object deserializeField(JsonDeserializationContext context,
+                                JsonElement obj,
+                                FieldDescriptor field)
+                                    throws ClassNotFoundException
+  {
+    switch(field.getJavaType())
+    {
+    case BOOLEAN:
+      return context.deserialize(obj,
+                                 Boolean.TYPE);
+    case BYTE_STRING:
+      ByteArrayOutputStream b = new ByteArrayOutputStream();
+      JsonArray array = obj.getAsJsonArray();
+      for(JsonElement e : array)
+      {
+        b.write(e.getAsInt());
+      }
+      return ByteString.copyFrom(b.toByteArray());
+    case DOUBLE:
+      return context.deserialize(obj,
+                                 Double.TYPE);
+    case ENUM:
+      return field.getEnumType()
+          .findValueByName(obj
+                           .getAsString());
+    case FLOAT:
+      return context.deserialize(obj,
+                                 Float.TYPE);
+    case INT:
+      return context.deserialize(obj,
+                                 Integer.TYPE);
+    case LONG:
+      return context.deserialize(obj,
+                                 Long.TYPE);
+    case MESSAGE:
+      String className = getClassName(field);
+      Class<? extends GeneratedMessage> sub = Class
+          .forName(className)
+          .asSubclass(GeneratedMessage.class);
+      return context.deserialize(obj,
+                                 sub);
+    case STRING:
+      return context.deserialize(obj,
+                                 String.class);
+    default:
+      return null;
+    }
   }
 
   private String getClassName(FieldDescriptor field)
