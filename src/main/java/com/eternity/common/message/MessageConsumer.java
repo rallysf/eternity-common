@@ -226,9 +226,18 @@ public abstract class MessageConsumer
     }
     catch (Exception e)
     {
-      e.printStackTrace();
+      log.error("Unable to process message:", e);
       response.setStatus(500);
-      response.data = encoder.encode(new ErrorResponse(e.getMessage()));
+      ErrorResponse er;
+      if(e.getCause() != null)
+      {
+        er = new ErrorResponse(e.getCause().getMessage());
+      }
+      else
+      {
+        er = new ErrorResponse(e.getMessage());
+      }
+      response.data = encoder.encode(er);
     }
     return response;
   }
