@@ -38,22 +38,23 @@ public class GeneratedMessageJsonDeserializer implements
     {
       @SuppressWarnings("unchecked")
       Class<? extends GeneratedMessage> type = (Class<? extends GeneratedMessage>)typeToken;
-      
+
       Builder builder = (Builder)type.getMethod("newBuilder")
           .invoke(null);
-      
+
       if(!json.isJsonObject())
         return type.cast(builder.build());
 
       JsonObject obj = json.getAsJsonObject();
-      
+
       Descriptor descriptor = (Descriptor)type.getMethod("getDescriptor")
           .invoke(null);
       for(FieldDescriptor field : descriptor.getFields())
       {
         String fieldName = field.getName();
+
         if(!obj.has(fieldName) || obj.get(fieldName).isJsonNull()) continue;
-        
+
         if(field.isRepeated())
         {
           if(obj.get(fieldName).isJsonArray())
@@ -80,7 +81,7 @@ public class GeneratedMessageJsonDeserializer implements
                                                    field));
         }
       }
-      
+
       return type.cast(builder.build());
     }
     catch (ClassNotFoundException e)
